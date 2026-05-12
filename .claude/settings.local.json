@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(file C:/Users/JesusRincon/.claude/projects/C--HC-Customer-Success-Board/b8a6375d-5549-41c6-a3c7-59401f2b68e4/tool-results/webfetch-1776715137570-dku18b.bin)",
+      "Bash(mkdir -p \"C:/Users/JesusRincon/.claude/plans/design-extract\")",
+      "Read(//c/Users/JesusRincon/.claude/plans/**)",
+      "Bash(cp C:/Users/JesusRincon/.claude/projects/C--HC-Customer-Success-Board/b8a6375d-5549-41c6-a3c7-59401f2b68e4/tool-results/webfetch-1776715137570-dku18b.bin bundle.gz)",
+      "Bash(gunzip -f bundle.gz)",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:3000/api/reminders)",
+      "Bash(curl *)",
+      "Bash(mkdir -p \"C:/Users/JesusRincon/.claude/plans/design-extract/v2\")",
+      "Bash(tar -xzf bundle.tar.gz)",
+      "PowerShell(npm run *)",
+      "PowerShell(Get-Command *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell($env:Path -split ';')",
+      "PowerShell($env:Path = \"C:\\\\Program Files\\\\AcumaticaTools\\\\NodeJS\\\\node-v22.11.0-win-x64;$env:Path\"; try { $r = Invoke-WebRequest http://localhost:3000/dashboard -UseBasicParsing -TimeoutSec 60; \"STATUS: $\\($r.StatusCode\\)\"; \"LEN: $\\($r.Content.Length\\)\" } catch { \"ERR: $_\" })"
+    ]
+  }
+}
