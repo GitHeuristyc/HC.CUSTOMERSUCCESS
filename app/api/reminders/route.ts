@@ -4,6 +4,7 @@ import {
   getSupabaseServerClient,
   getUserMaps,
 } from "@/lib/supabase";
+import { requireUser } from "@/lib/supabase-server";
 import {
   encodeDueTag,
   isAssignee,
@@ -13,6 +14,9 @@ import {
 } from "@/lib/reminders";
 
 export async function GET(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json(
@@ -60,6 +64,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });

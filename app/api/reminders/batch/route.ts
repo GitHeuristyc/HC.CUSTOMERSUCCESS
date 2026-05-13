@@ -34,6 +34,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User mapping unavailable" }, { status: 500 });
   }
 
+  // Build an email → users.id map so external scripts can use `assigned_to_email`
+  // instead of the internal UserId literal (jesus | david | both).
+  const { data: allUsers } = await supabase
+    .from("users")
+    .select("id, email");
+  const emailToUuid = new Map<string, string>();
+  for (const u of allUsers ?? []) {
+    if (u?.email && u?.id) {
+      emailToUuid.set((u.email as string).toLowerCase(), u.id as string);
+    }
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -41,13 +53,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const reminders =
-    body && typeof body === "object" && Array.isArray((body as { reminders?: unknown }).reminders)
-      ? ((body as { reminders: unknown[] }).reminders)
+  // Accept either { reminders: [...] } (legacy) or { items: [...] } (Fathom routine).
+  const list =
+    body && typeof body === "object"
+      ? (Array.isArray((body as { reminders?: unknown }).reminders)
+          ? (body as { reminders: unknown[] }).reminders
+          : Array.isArray((body as { items?: unknown }).items)
+            ? (body as { items: unknown[] }).items
+            : null)
       : null;
-  if (!reminders) {
+
+  if (!list) {
     return NextResponse.json(
-      { error: "Body must be { reminders: [...] }" },
+      { error: "Body must be { items: [...] } or { reminders: [...] }" },
       { status: 400 }
     );
   }
@@ -55,7 +73,7 @@ export async function POST(req: NextRequest) {
   const rows: Array<Record<string, unknown>> = [];
   const errors: Array<{ index: number; error: string }> = [];
 
-  reminders.forEach((item, idx) => {
+  list.forEach((item, idx) => {
     if (!item || typeof item !== "object") {
       errors.push({ index: idx, error: "not an object" });
       return;
@@ -69,15 +87,33 @@ export async function POST(req: NextRequest) {
       errors.push({ index: idx, error: "title required" });
       return;
     }
+
     const source = isSource(r.source) ? r.source : "fathom";
-    const assignee = isAssignee(r.assignee) ? r.assignee : "both";
+
+    // Resolve assignee: prefer assigned_to_email (external), fall back to assignee (legacy).
+    let assignedTo: string | null = null;
+    if (typeof r.assigned_to_email === "string") {
+      const uuid = emailToUuid.get(r.assigned_to_email.toLowerCase());
+      if (!uuid) {
+        errors.push({
+          index: idx,
+          error: `assigned_to_email '${r.assigned_to_email}' not found in users`,
+        });
+        return;
+      }
+      assignedTo = uuid;
+    } else if (isAssignee(r.assignee)) {
+      assignedTo = assigneeToUuid(r.assignee, maps);
+    } else {
+      assignedTo = null; // unassigned = "both"
+    }
 
     rows.push({
       source,
       title: r.title,
       body: typeof r.body === "string" ? r.body : null,
       status: "new",
-      assigned_to: assigneeToUuid(assignee, maps),
+      assigned_to: assignedTo,
       fathom_link: typeof r.fathom_link === "string" ? r.fathom_link : null,
       fathom_meeting_id:
         typeof r.fathom_meeting_id === "string" ? r.fathom_meeting_id : null,

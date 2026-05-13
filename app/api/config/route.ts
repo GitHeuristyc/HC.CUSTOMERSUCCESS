@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { requireUser } from "@/lib/supabase-server";
 import {
   loadConfig,
   validateAlertRules,
@@ -8,6 +9,9 @@ import {
 } from "@/lib/config";
 
 export async function GET() {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
@@ -17,6 +21,12 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+  if (auth.user.role !== "admin") {
+    return NextResponse.json({ error: "Forbidden: admin role required" }, { status: 403 });
+  }
+
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });

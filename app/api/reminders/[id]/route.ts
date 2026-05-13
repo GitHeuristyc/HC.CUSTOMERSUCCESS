@@ -4,6 +4,7 @@ import {
   getSupabaseServerClient,
   getUserMaps,
 } from "@/lib/supabase";
+import { requireUser } from "@/lib/supabase-server";
 import {
   isAssignee,
   isStatus,
@@ -14,6 +15,9 @@ import {
 type RouteCtx = { params: { id: string } };
 
 export async function PATCH(req: NextRequest, { params }: RouteCtx) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });
@@ -82,6 +86,9 @@ export async function PATCH(req: NextRequest, { params }: RouteCtx) {
 }
 
 export async function DELETE(_req: NextRequest, { params }: RouteCtx) {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
   if (!supabase) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 500 });

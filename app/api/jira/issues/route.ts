@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { fetchAllJiraIssues } from "@/lib/jira";
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { requireUser } from "@/lib/supabase-server";
 
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function GET() {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
 
   // Try Supabase cache first

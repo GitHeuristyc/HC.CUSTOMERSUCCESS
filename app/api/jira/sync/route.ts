@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { fetchAllJiraIssues } from "@/lib/jira";
 import { getSupabaseServerClient } from "@/lib/supabase";
+import { requireUser } from "@/lib/supabase-server";
 
 export async function POST() {
+  const auth = await requireUser();
+  if (!auth.ok) return auth.response;
+
   const supabase = getSupabaseServerClient();
 
   try {
