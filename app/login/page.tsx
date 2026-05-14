@@ -6,9 +6,9 @@ import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 const ERROR_MESSAGES: Record<string, string> = {
   domain_not_allowed: "Solo cuentas @heuristyc.com pueden ingresar.",
-  user_not_provisioned: "Tu usuario no está habilitado en este board. Pedile al admin que te de acceso.",
-  callback_failed: "Hubo un error al iniciar sesión. Probá de nuevo.",
-  invalid_session: "Sesión inválida. Probá de nuevo.",
+  user_not_provisioned: "Tu usuario no está habilitado en este board. Pídele al admin que te dé acceso.",
+  callback_failed: "Hubo un error al iniciar sesión. Inténtalo de nuevo.",
+  invalid_session: "Sesión inválida. Inténtalo de nuevo.",
 };
 
 function LoginInner() {
@@ -122,7 +122,7 @@ function LoginInner() {
               color: "var(--ink-2)",
             }}
           >
-            Revisá tu casilla — te mandamos un link a <b>{emailValue}</b> para entrar.
+            Revisa tu bandeja — te enviamos un enlace a <b>{emailValue}</b> para entrar.
           </div>
         ) : (
           <form onSubmit={sendMagicLink} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
