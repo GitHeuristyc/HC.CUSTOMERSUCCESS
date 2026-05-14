@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { getSupabaseServerClient } from "@/lib/supabase";
 
@@ -9,6 +10,8 @@ const ALLOWED_DOMAIN =
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const otpType = searchParams.get("type") as EmailOtpType | null;
   const next = searchParams.get("next") ?? "/";
 
   // Mutable response — reassigned when we know whether to redirect to next or to /login.
@@ -48,16 +51,31 @@ export async function GET(req: NextRequest) {
     return response;
   };
 
-  if (!code) {
+  let userEmail: string | null = null;
+  let userId: string | null = null;
+
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error || !data.user?.email) {
+      return failTo("callback_failed");
+    }
+    userEmail = data.user.email;
+    userId = data.user.id;
+  } else if (tokenHash && otpType) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: otpType,
+    });
+    if (error || !data.user?.email) {
+      return failTo("callback_failed");
+    }
+    userEmail = data.user.email;
+    userId = data.user.id;
+  } else {
     return failTo("callback_failed");
   }
 
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error || !data.user?.email) {
-    return failTo("callback_failed");
-  }
-
-  const email = data.user.email.toLowerCase();
+  const email = userEmail!.toLowerCase();
 
   if (!email.endsWith(`@${ALLOWED_DOMAIN}`)) {
     await supabase.auth.signOut();
@@ -82,7 +100,7 @@ export async function GET(req: NextRequest) {
 
   await admin
     .from("users")
-    .update({ auth_user_id: data.user.id })
+    .update({ auth_user_id: userId })
     .eq("id", row.id);
 
   return response;
