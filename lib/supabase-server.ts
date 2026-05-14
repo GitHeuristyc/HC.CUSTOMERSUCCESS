@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { getSupabaseServerClient } from "./supabase";
 import type { UserId } from "./types";
 
 const USER_EMAIL_BY_ID: Record<UserId, string> = {
@@ -55,13 +56,19 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   } = await supabase.auth.getUser();
   if (!user?.email) return null;
 
-  const userId = EMAIL_TO_USER_ID[user.email];
+  const email = user.email.toLowerCase();
+  const userId = EMAIL_TO_USER_ID[email];
   if (!userId) return null;
 
-  const { data: row } = await supabase
+  // Use admin client (service role) to bypass RLS — identity is already
+  // verified via getUser() above; we just need the user's metadata row.
+  const admin = getSupabaseServerClient();
+  if (!admin) return null;
+
+  const { data: row } = await admin
     .from("users")
     .select("id, email, role, name, active")
-    .eq("email", user.email)
+    .eq("email", email)
     .maybeSingle();
 
   if (!row || row.active === false) return null;
