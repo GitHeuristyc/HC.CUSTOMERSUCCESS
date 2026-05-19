@@ -32,8 +32,10 @@ const STALE_MS = 7 * 24 * 60 * 60 * 1000;
 function transformIssue(raw: any): Issue | null {
   const { fields } = raw;
   const statusName: string = fields.status?.name ?? "";
-  const column = STATUS_TO_COLUMN[statusName];
-  if (!column) return null;
+  const categoryKey: string = fields.status?.statusCategory?.key ?? "";
+  const column =
+    STATUS_TO_COLUMN[statusName] ??
+    (categoryKey === "new" ? "To Do" : "In Progress");
 
   const accountId: string = fields.assignee?.accountId ?? "";
   const assignee = ACCOUNT_TO_USER[accountId];
