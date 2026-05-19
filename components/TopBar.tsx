@@ -22,6 +22,8 @@ type Props = {
   isSyncing: boolean;
   onForceSync: () => void;
   onNewReminder: () => void;
+  remindersActiveCount: number;
+  remindersNewFathomCount: number;
 };
 
 export function TopBar({
@@ -40,6 +42,8 @@ export function TopBar({
   isSyncing,
   onForceSync,
   onNewReminder,
+  remindersActiveCount,
+  remindersNewFathomCount,
 }: Props) {
   const options: { id: UserFilter; count: number }[] = [
     { id: "jesus", count: counts.jesus },
@@ -321,25 +325,99 @@ export function TopBar({
             ⌘K
           </span>
         </button>
-        <IconBtn
-          label="Toggle reminders"
-          active={showReminders}
+        <button
           onClick={() => setShowReminders(!showReminders)}
+          aria-pressed={showReminders}
+          title={showReminders ? "Hide reminders rail" : "Show reminders rail"}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 7,
+            padding: "5px 9px 5px 8px",
+            borderRadius: 8,
+            fontSize: 12,
+            fontWeight: 500,
+            cursor: "pointer",
+            color: showReminders ? "var(--ink)" : "var(--ink-2)",
+            background: showReminders
+              ? "color-mix(in oklch, var(--ext) 14%, var(--surface))"
+              : "var(--surface)",
+            border: showReminders
+              ? "1px solid color-mix(in oklch, var(--ext) 40%, var(--line))"
+              : "1px solid var(--line)",
+            transition: "background .12s, border-color .12s, color .12s",
+          }}
         >
+          <span style={{ position: "relative", display: "inline-flex", lineHeight: 0 }}>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10 21a2 2 0 0 0 4 0" />
+            </svg>
+            {!showReminders && remindersNewFathomCount > 0 && (
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  top: -2,
+                  right: -2,
+                  width: 7,
+                  height: 7,
+                  borderRadius: 999,
+                  background: "var(--ext)",
+                  border: "1.5px solid var(--bg)",
+                  animation: "pulse-dot 2s ease-in-out infinite",
+                }}
+              />
+            )}
+          </span>
+          <span>Reminders</span>
+          {remindersActiveCount > 0 && (
+            <span
+              style={{
+                fontFamily: "var(--font-geist-mono), Geist Mono, monospace",
+                fontSize: 10.5,
+                padding: "1px 6px",
+                borderRadius: 999,
+                background: showReminders
+                  ? "color-mix(in oklch, var(--ext) 22%, transparent)"
+                  : "var(--surface-2)",
+                color: showReminders ? "var(--ext)" : "var(--ink-2)",
+                border: showReminders
+                  ? "1px solid color-mix(in oklch, var(--ext) 35%, transparent)"
+                  : "1px solid var(--line)",
+                lineHeight: 1.4,
+              }}
+            >
+              {remindersActiveCount}
+            </span>
+          )}
           <svg
-            width="14"
-            height="14"
+            width="10"
+            height="10"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            style={{
+              transform: showReminders ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform .18s",
+              color: "var(--ink-3)",
+            }}
           >
-            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-            <path d="M10 21a2 2 0 0 0 4 0" />
+            <polyline points="9 18 15 12 9 6" />
           </svg>
-        </IconBtn>
+        </button>
         <form action="/auth/signout" method="post" style={{ display: "inline-flex" }}>
           <button
             type="submit"

@@ -225,6 +225,16 @@ export function Board() {
     david: issues.filter((i) => i.assignee === "david").length,
   }), [issues]);
 
+  const remindersActiveCount = useMemo(
+    () => reminders.filter((r) => r.status !== "completed").length,
+    [reminders]
+  );
+  const remindersNewFathomCount = useMemo(
+    () =>
+      reminders.filter((r) => r.source === "fathom" && r.status === "new").length,
+    [reminders]
+  );
+
   return (
     <div
       style={{
@@ -251,6 +261,8 @@ export function Board() {
         isSyncing={isSyncing}
         onForceSync={() => fetchIssues(true)}
         onNewReminder={() => setShowGlobalComposer(true)}
+        remindersActiveCount={remindersActiveCount}
+        remindersNewFathomCount={remindersNewFathomCount}
       />
 
       {/* Error banner */}
