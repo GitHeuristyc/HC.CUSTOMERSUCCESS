@@ -7,7 +7,7 @@ const JIRA_BASE_URL = process.env.JIRA_BASE_URL!;
 const JIRA_EMAIL = process.env.JIRA_EMAIL!;
 const JIRA_API_TOKEN = process.env.JIRA_API_TOKEN!;
 
-const VALID_PROJECTS = new Set<string>(["PK", "AI", "EDU", "EXT", "PRD", "IMP", "PRIM", "PM"]);
+const VALID_PROJECTS = new Set<string>(["PK", "AI", "EDU", "EXT", "PRD", "IMP", "PRIM", "PM", "EOSCOMP"]);
 
 const ACCOUNT_TO_USER: Record<string, UserId> = {
   "712020:440220cd-0562-489b-bf5d-2903f49d6e4c": "jesus",
@@ -15,7 +15,7 @@ const ACCOUNT_TO_USER: Record<string, UserId> = {
 };
 
 const STATUS_TO_COLUMN: Record<string, ColumnId> = {
-  Backlog: "Backlog",
+  Backlog: "To Do",
   "To Do": "To Do",
   Discovery: "Discovery",
   "In Progress": "In Progress",

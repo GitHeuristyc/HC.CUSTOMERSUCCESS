@@ -8,7 +8,7 @@ export type User = {
   color: string;
 };
 
-export type ProjectKey = "PK" | "AI" | "EDU" | "EXT" | "PRD" | "IMP" | "PRIM" | "PM";
+export type ProjectKey = "PK" | "AI" | "EDU" | "EXT" | "PRD" | "IMP" | "PRIM" | "PM" | "EOSCOMP";
 
 export type Project = {
   key: ProjectKey;
@@ -18,7 +18,6 @@ export type Project = {
 };
 
 export type ColumnId =
-  | "Backlog"
   | "To Do"
   | "Discovery"
   | "In Progress"

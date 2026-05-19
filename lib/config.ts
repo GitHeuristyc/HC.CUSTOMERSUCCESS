@@ -14,7 +14,7 @@ export type AppConfig = {
 };
 
 export const DEFAULT_CONFIG: AppConfig = {
-  excluded_projects: ["CST", "HP", "HR", "ARQ", "EOSCOMP"],
+  excluded_projects: ["CST", "HP", "HR", "ARQ"],
   alert_rules: {
     inactivity_days: 7,
     highlight_awaiting_approval: true,

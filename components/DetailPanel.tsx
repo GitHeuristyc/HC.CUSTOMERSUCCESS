@@ -5,6 +5,9 @@ import { PROJECTS, REMINDERS, USERS } from "@/lib/mock-data";
 import type { Issue } from "@/lib/types";
 import { Avatar, Pill, PriorityDot, ProjectBadge } from "./atoms";
 
+const JIRA_BROWSE_BASE =
+  process.env.NEXT_PUBLIC_JIRA_BASE_URL ?? "https://heuristyc.atlassian.net";
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
@@ -71,9 +74,23 @@ export function DetailPanel({ issue, onClose }: Props) {
           >
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <ProjectBadge projectKey={issue.project} />
-              <span className="mono" style={{ fontSize: 12, color: "var(--ink-3)" }}>
+              <a
+                href={`${JIRA_BROWSE_BASE}/browse/${issue.key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mono"
+                style={{ fontSize: 12, color: "var(--ink-3)", textDecoration: "none" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--ink)";
+                  e.currentTarget.style.textDecoration = "underline";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--ink-3)";
+                  e.currentTarget.style.textDecoration = "none";
+                }}
+              >
                 {issue.key}
-              </span>
+              </a>
             </div>
             <button
               onClick={onClose}

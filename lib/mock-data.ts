@@ -26,10 +26,10 @@ export const PROJECTS: Record<ProjectKey, Project> = {
   IMP:  { key: "IMP",  name: "Implementation",  color: "var(--imp)",  owner: "david" },
   PRIM: { key: "PRIM", name: "Primary",         color: "var(--prim)", owner: "david" },
   PM:   { key: "PM",   name: "Project Mgmt",    color: "var(--pm)",   owner: "david" },
+  EOSCOMP: { key: "EOSCOMP", name: "EOSCOMP", color: "var(--eos)", owner: "jesus" },
 };
 
 export const COLUMNS: ColumnDef[] = [
-  { id: "Backlog",     label: "Backlog" },
   { id: "To Do",       label: "To Do" },
   { id: "Discovery",   label: "Discovery" },
   { id: "In Progress", label: "In Progress" },
@@ -64,11 +64,11 @@ export const ISSUES: Issue[] = [
     updated: "5h", created: "3d" },
 
   { key: "EDU-61", project: "EDU", title: "Record walkthrough: Configurator basics", type: "Task",
-    assignee: "jesus", status: "Backlog", priority: "Low",
+    assignee: "jesus", status: "To Do", priority: "Low",
     updated: "1d", created: "1d" },
 
   { key: "AI-151", project: "AI", title: "Fathom ↔ Jira linker prompt", type: "Task",
-    assignee: "jesus", status: "Backlog", priority: "Medium",
+    assignee: "jesus", status: "To Do", priority: "Medium",
     updated: "6h", created: "6h" },
 
   // ── David (EXT / PRD / IMP / PRIM / PM) ───────────────────────────
@@ -121,7 +121,7 @@ export const ISSUES: Issue[] = [
     updated: "3d", created: "7d" },
 
   { key: "PRIM-55", project: "PRIM", title: "Primary client QBR deck template", type: "Task",
-    assignee: "david", status: "Backlog", priority: "Low",
+    assignee: "david", status: "To Do", priority: "Low",
     updated: "2d", created: "2d" },
 
   { key: "PM-77", project: "PM", title: "Sprint 24 retro notes — owners", type: "Task",
@@ -133,7 +133,7 @@ export const ISSUES: Issue[] = [
     updated: "4h", created: "1d" },
 
   { key: "EXT-2935", project: "EXT", title: "Countertop overhang validation rule", type: "Story",
-    assignee: "david", status: "Backlog", priority: "Medium",
+    assignee: "david", status: "To Do", priority: "Medium",
     updated: "1d", created: "1d" },
 ];
 

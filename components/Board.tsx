@@ -128,7 +128,6 @@ export function Board() {
 
   const byColumn = useMemo(() => {
     const map: Record<ColumnId, Issue[]> = {
-      Backlog: [],
       "To Do": [],
       Discovery: [],
       "In Progress": [],

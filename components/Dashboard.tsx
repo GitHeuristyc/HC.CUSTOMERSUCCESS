@@ -345,7 +345,6 @@ function TicketsByStatus({ issues }: { issues: Issue[] }) {
   const rows = COLUMNS.map((c) => ({ id: c.id, count: issues.filter((i) => i.status === c.id).length }));
   const max = Math.max(...rows.map((r) => r.count), 1);
   const statusColor: Record<ColumnId, string> = {
-    Backlog: "var(--ink-4)",
     "To Do": "var(--pk)",
     Discovery: "var(--ai)",
     "In Progress": "var(--ext)",

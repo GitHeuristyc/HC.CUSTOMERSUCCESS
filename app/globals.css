@@ -21,6 +21,7 @@
   --imp:   oklch(0.72 0.12 210); /* cyan */
   --prim:  oklch(0.72 0.13 350); /* pink */
   --pm:    oklch(0.65 0.01 265); /* gray */
+  --eos:   oklch(0.78 0.14 95);  /* yellow */
 
   /* Semantic */
   --rose:   oklch(0.68 0.17 25);

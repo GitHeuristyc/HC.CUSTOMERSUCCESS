@@ -4,6 +4,9 @@ import { PROJECTS } from "@/lib/mock-data";
 import type { Issue } from "@/lib/types";
 import { Avatar, Pill, PriorityDot, ProjectBadge } from "./atoms";
 
+const JIRA_BROWSE_BASE =
+  process.env.NEXT_PUBLIC_JIRA_BASE_URL ?? "https://heuristyc.atlassian.net";
+
 type Props = {
   issue: Issue;
   onOpen?: (issue: Issue) => void;
@@ -52,12 +55,29 @@ export function IssueCard({ issue, onOpen }: Props) {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
           <ProjectBadge projectKey={issue.project} />
-          <span
+          <a
+            href={`${JIRA_BROWSE_BASE}/browse/${issue.key}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="mono"
-            style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.02em" }}
+            style={{
+              fontSize: 11,
+              color: "var(--ink-3)",
+              letterSpacing: "0.02em",
+              textDecoration: "none",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "var(--ink)";
+              e.currentTarget.style.textDecoration = "underline";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "var(--ink-3)";
+              e.currentTarget.style.textDecoration = "none";
+            }}
           >
             {issue.key}
-          </span>
+          </a>
         </div>
         <Avatar userId={issue.assignee} size={20} />
       </div>
