@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 const PUBLIC_PATHS = ["/login", "/auth/callback", "/auth/signout"];
-const PUBLIC_API_PATHS = ["/api/reminders/batch"];
+const PUBLIC_API_PATHS = ["/api/reminders/batch", "/api/email/threads/batch"];
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"))) {

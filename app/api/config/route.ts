@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/supabase-server";
 import {
   loadConfig,
   validateAlertRules,
+  validateEmailSlaConfig,
   validateExcludedProjects,
   type AppConfig,
 } from "@/lib/config";
@@ -61,6 +62,12 @@ export async function PATCH(req: NextRequest) {
     if (!v)
       return NextResponse.json({ error: "invalid alert_rules shape" }, { status: 400 });
     updates.push({ key: "alert_rules", value: v });
+  }
+  if ("email_sla" in input) {
+    const v = validateEmailSlaConfig(input.email_sla);
+    if (!v)
+      return NextResponse.json({ error: "invalid email_sla shape" }, { status: 400 });
+    updates.push({ key: "email_sla", value: v });
   }
   if ("sync_interval_minutes" in input) {
     const n = input.sync_interval_minutes;

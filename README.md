@@ -19,11 +19,14 @@ app/
       issues/      # Lista issues desde cache / Jira
       sync/        # Sincroniza issues de Jira a Supabase
     reminders/     # CRUD de recordatorios (+ batch e [id])
+    email/         # Email SLA: ingesta (threads/batch) y lectura (kpis, threads, weekday-avg)
+  email-sla/       # Panel de KPIs de Email SLA
   settings/        # UI de configuración
   page.tsx         # Board principal
-components/        # Board, Column, IssueCard, DetailPanel, TopBar, etc.
+components/        # Board, Column, IssueCard, DetailPanel, TopBar, EmailSla, etc.
 lib/
-  config.ts        # AppConfig + defaults + validación
+  config.ts        # AppConfig + defaults + validación (incluye email_sla)
+  email-sla.ts     # Derivación de status, KPIs y validación de ingesta de email
   jira.ts          # Cliente Jira
   reminders.ts     # Lógica de recordatorios
   supabase.ts      # Clientes Supabase (anon + service role)
@@ -31,7 +34,10 @@ lib/
   utils.ts
   mock-data.ts
 supabase/
-  migrations/001_init.sql   # Esquema inicial: users, reminders, notes, config, jira_issues_cache
+  migrations/001_init.sql      # Esquema inicial: users, reminders, notes, config, jira_issues_cache
+  migrations/003_email_sla.sql # email_threads + config email_sla
+docs/
+  email-routine-contract.md    # Contrato de la routine de email (payload, auth, reglas)
 ```
 
 ## Requisitos
@@ -153,6 +159,10 @@ npm run start
 - `GET/POST /api/reminders` — listar/crear recordatorios
 - `GET/PATCH/DELETE /api/reminders/[id]`
 - `POST /api/reminders/batch`
+- `POST /api/email/threads/batch` — ingesta de la routine de email (requiere `ROUTINE_API_KEY`; ver `docs/email-routine-contract.md`)
+- `GET /api/email/kpis` — KPIs de Email SLA (semana + mes + deltas)
+- `GET /api/email/threads` — hilos sin responder por urgencia (paginado)
+- `GET /api/email/weekday-avg` — promedio de 1ª respuesta por día de la semana
 
 ## Notas
 

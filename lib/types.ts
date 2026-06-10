@@ -63,6 +63,44 @@ export type Reminder = {
   due?: ReminderDue;
 };
 
+export type EmailThreadStatus =
+  | "respondido"
+  | "pendiente"
+  | "en_riesgo"
+  | "vencido";
+
+export type EmailThread = {
+  thread_id: string;
+  subject: string;
+  sender_email: string;
+  sender_domain: string;
+  received_at: string;
+  first_response_at: string | null;
+  last_message_at: string;
+  status: EmailThreadStatus;
+  business_hours_elapsed: number;
+  business_hours_to_resolution: number | null;
+  resolved_at: string | null;
+};
+
+export type EmailSlaKpis = {
+  threads_total: number;
+  responded: number;
+  avg_first_response_hours: number | null;
+  pct_within_sla: number | null;
+  unanswered: number;
+  at_risk: number;
+  overdue: number;
+  avg_resolution_hours: number | null;
+};
+
+export type EmailSlaKpiDeltas = {
+  avg_first_response_hours: number | null;
+  pct_within_sla: number | null;
+  unanswered: number | null;
+  avg_resolution_hours: number | null;
+};
+
 export type Tweaks = {
   theme: "dark" | "light";
   density: "compact" | "cozy" | "roomy";

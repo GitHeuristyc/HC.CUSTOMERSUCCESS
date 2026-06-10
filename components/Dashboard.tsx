@@ -722,6 +722,19 @@ export function Dashboard() {
           >
             Dashboard
           </span>
+          <Link
+            href="/email-sla"
+            style={{
+              padding: "5px 12px",
+              borderRadius: 7,
+              fontSize: 12,
+              fontWeight: 500,
+              color: "var(--ink-3)",
+              textDecoration: "none",
+            }}
+          >
+            Email SLA
+          </Link>
         </nav>
 
         <div style={{ flex: 1 }} />
