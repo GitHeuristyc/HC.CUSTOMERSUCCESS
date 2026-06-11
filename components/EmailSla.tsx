@@ -32,6 +32,8 @@ type KpisResponse = {
 type ThreadsResponse = {
   threads: EmailThread[];
   total: number;
+  dismissed_total: number;
+  mailboxes: string[];
 };
 
 type WeekdayAvg = {
@@ -54,6 +56,16 @@ const STATUS_META: Record<EmailThreadStatus, { label: string; color: string }> =
 
 const fmtHours = (h: number | null | undefined): string =>
   h === null || h === undefined ? "—" : `${h.toFixed(1)}h`;
+
+/** "jrincon@heuristyc.com, david@heuristyc.com" → "jrincon · david" */
+const fmtMailbox = (mailbox: string | null): string =>
+  mailbox === null
+    ? "—"
+    : mailbox
+        .split(",")
+        .map((m) => m.trim().split("@")[0])
+        .filter(Boolean)
+        .join(" · ");
 
 const fmtPct = (p: number | null | undefined): string =>
   p === null || p === undefined ? "—" : `${Math.round(p)}%`;
@@ -156,35 +168,71 @@ function EmptyState() {
 
 /* ---------- pending threads list ---------- */
 
-function PendingList({ threads, total }: { threads: EmailThread[]; total: number }) {
+function PendingList({
+  threads,
+  total,
+  dismissedTotal,
+  showDismissed,
+  onToggleDismissed,
+  onSetDismissed,
+}: {
+  threads: EmailThread[];
+  total: number;
+  dismissedTotal: number;
+  showDismissed: boolean;
+  onToggleDismissed: () => void;
+  onSetDismissed: (threadId: string, dismissed: boolean) => void;
+}) {
   return (
     <div className="dash-card" style={{ gridColumn: "1 / -1" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
         <div>
-          <div className="dash-card-title" style={{ margin: 0 }}>Hilos sin responder · por urgencia</div>
+          <div className="dash-card-title" style={{ margin: 0 }}>
+            {showDismissed
+              ? "Hilos descartados · no requieren respuesta"
+              : "Hilos sin responder · por urgencia"}
+          </div>
           <div className="dash-card-h2" style={{ marginTop: 6 }}>
             {total}{" "}
             <span style={{ fontSize: 13, color: "var(--ink-3)", fontFamily: "var(--font-geist-sans), Geist, sans-serif" }}>
-              esperando primera respuesta
+              {showDismissed ? "marcados manualmente" : "esperando primera respuesta"}
             </span>
           </div>
         </div>
+        {(dismissedTotal > 0 || showDismissed) && (
+          <button
+            onClick={onToggleDismissed}
+            style={{
+              border: "1px solid var(--line)",
+              background: showDismissed ? "var(--surface-2)" : "transparent",
+              color: showDismissed ? "var(--ink)" : "var(--ink-3)",
+              borderRadius: 999,
+              padding: "5px 12px",
+              fontSize: 11.5,
+              cursor: "pointer",
+            }}
+          >
+            {showDismissed ? "← Volver a pendientes" : `Descartados (${dismissedTotal})`}
+          </button>
+        )}
       </div>
       {threads.length === 0 ? (
         <div style={{ padding: "22px 4px 8px", fontSize: 12.5, color: "var(--ink-3)" }}>
-          Nada pendiente — todos los hilos tienen respuesta. ✓
+          {showDismissed
+            ? "No hay hilos descartados."
+            : "Nada pendiente — todos los hilos tienen respuesta. ✓"}
         </div>
       ) : (
         <div style={{ marginTop: 10, display: "flex", flexDirection: "column" }}>
           {threads.map((t) => {
             const meta = STATUS_META[t.status];
-            const hot = t.status === "vencido" || t.status === "en_riesgo";
+            const hot = !showDismissed && (t.status === "vencido" || t.status === "en_riesgo");
             return (
               <div
                 key={t.thread_id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "220px 1fr 90px 110px",
+                  gridTemplateColumns: "200px 1fr 100px 80px 110px 150px",
                   alignItems: "center",
                   gap: 12,
                   padding: "10px 8px",
@@ -193,6 +241,7 @@ function PendingList({ threads, total }: { threads: EmailThread[]; total: number
                   background: hot
                     ? `color-mix(in oklch, ${meta.color} 6%, transparent)`
                     : "transparent",
+                  opacity: showDismissed ? 0.75 : 1,
                 }}
               >
                 <span
@@ -221,6 +270,19 @@ function PendingList({ threads, total }: { threads: EmailThread[]; total: number
                   {t.subject || "(sin asunto)"}
                 </span>
                 <span
+                  title={t.mailbox ?? undefined}
+                  style={{
+                    fontSize: 10.5,
+                    color: "var(--ink-3)",
+                    fontFamily: "var(--font-geist-mono), Geist Mono, monospace",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  📥 {fmtMailbox(t.mailbox)}
+                </span>
+                <span
                   style={{
                     textAlign: "right",
                     fontSize: 12,
@@ -232,7 +294,31 @@ function PendingList({ threads, total }: { threads: EmailThread[]; total: number
                   {fmtHours(t.business_hours_elapsed)}
                 </span>
                 <span style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <Pill color={meta.color}>{meta.label}</Pill>
+                  <Pill color={showDismissed ? "var(--ink-4)" : meta.color}>
+                    {showDismissed ? "Descartado" : meta.label}
+                  </Pill>
+                </span>
+                <span style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => onSetDismissed(t.thread_id, !showDismissed)}
+                    title={
+                      showDismissed
+                        ? "Devolver a la lista de pendientes"
+                        : "Marcar como que no requiere respuesta — sale de los KPIs"
+                    }
+                    style={{
+                      border: "1px solid var(--line)",
+                      background: "transparent",
+                      color: "var(--ink-3)",
+                      borderRadius: 7,
+                      padding: "4px 10px",
+                      fontSize: 11,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {showDismissed ? "↩ Restaurar" : "✕ No se responde"}
+                  </button>
                 </span>
               </div>
             );
@@ -390,23 +476,33 @@ export function EmailSla() {
   const [weekdayData, setWeekdayData] = useState<WeekdayResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mailbox, setMailbox] = useState<string>(""); // "" = todos
+  const [mailboxes, setMailboxes] = useState<string[]>([]);
+  const [showDismissed, setShowDismissed] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        const mb = mailbox ? `&mailbox=${encodeURIComponent(mailbox)}` : "";
         const [k, t, w] = await Promise.all([
-          fetch("/api/email/kpis").then((r) => r.json()),
-          fetch("/api/email/threads?page_size=50").then((r) => r.json()),
-          fetch("/api/email/weekday-avg").then((r) => r.json()),
+          fetch(`/api/email/kpis?${mb}`).then((r) => r.json()),
+          fetch(
+            `/api/email/threads?page_size=50${mb}${showDismissed ? "&dismissed=true" : ""}`
+          ).then((r) => r.json()),
+          fetch(`/api/email/weekday-avg?${mb}`).then((r) => r.json()),
         ]);
         if (cancelled) return;
         if (k?.error || t?.error || w?.error) {
           setError(k?.error ?? t?.error ?? w?.error);
         } else {
+          setError(null);
           setKpisData(k as KpisResponse);
           setThreadsData(t as ThreadsResponse);
           setWeekdayData(w as WeekdayResponse);
+          // Las opciones de buzón no dependen del filtro activo.
+          setMailboxes((t as ThreadsResponse).mailboxes ?? []);
         }
       } catch (err) {
         if (!cancelled) setError((err as Error).message);
@@ -417,7 +513,25 @@ export function EmailSla() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [mailbox, showDismissed, refreshKey]);
+
+  const setDismissed = async (threadId: string, dismissed: boolean) => {
+    try {
+      const res = await fetch("/api/email/threads", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ thread_id: threadId, dismissed }),
+      });
+      const body = await res.json();
+      if (body?.error) {
+        setError(body.error);
+        return;
+      }
+      setRefreshKey((k) => k + 1);
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
 
   const target = kpisData?.config.sla_target_hours ?? 24;
   const atRiskThreshold = kpisData?.config.at_risk_threshold_hours ?? 20;
@@ -427,13 +541,15 @@ export function EmailSla() {
 
   const isEmpty = useMemo(() => {
     if (!kpisData || !threadsData) return false;
+    // Con un filtro activo, cero hilos es un resultado válido, no "sin datos".
+    if (mailbox !== "" || showDismissed) return false;
     return (
       kpisData.month.kpis.threads_total === 0 &&
       kpisData.week.kpis.threads_total === 0 &&
       kpisData.prev_week.kpis.threads_total === 0 &&
       threadsData.total === 0
     );
-  }, [kpisData, threadsData]);
+  }, [kpisData, threadsData, mailbox, showDismissed]);
 
   const firstResponseTone: Tone =
     !week || week.avg_first_response_hours === null
@@ -573,6 +689,45 @@ export function EmailSla() {
           semana actual + acumulado mensual ·{" "}
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
         </span>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Filtro por buzón — aplica a KPIs, lista y gráficas */}
+        {mailboxes.length > 1 && (
+          <div
+            style={{
+              display: "flex",
+              gap: 2,
+              padding: 3,
+              background: "var(--surface)",
+              border: "1px solid var(--line)",
+              borderRadius: 10,
+            }}
+          >
+            {["", ...mailboxes].map((mb) => {
+              const active = mailbox === mb;
+              return (
+                <button
+                  key={mb || "all"}
+                  onClick={() => setMailbox(mb)}
+                  style={{
+                    padding: "5px 12px",
+                    borderRadius: 7,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    border: active ? "1px solid var(--line)" : "1px solid transparent",
+                    background: active ? "var(--surface-2)" : "transparent",
+                    color: active ? "var(--ink)" : "var(--ink-3)",
+                    cursor: "pointer",
+                    fontFamily: mb ? "var(--font-geist-mono), Geist Mono, monospace" : undefined,
+                  }}
+                >
+                  {mb === "" ? "Todos" : `📥 ${mb.split("@")[0]}`}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Error banner */}
@@ -672,6 +827,10 @@ export function EmailSla() {
             <PendingList
               threads={threadsData?.threads ?? []}
               total={threadsData?.total ?? 0}
+              dismissedTotal={threadsData?.dismissed_total ?? 0}
+              showDismissed={showDismissed}
+              onToggleDismissed={() => setShowDismissed((v) => !v)}
+              onSetDismissed={setDismissed}
             />
 
             <WeekdayBars weekdays={weekdayData?.weekdays ?? []} target={target} />

@@ -159,8 +159,21 @@ Derivación de estado (en el backend, al leer):
 
 Requieren sesión (cookie de Supabase Auth) — no son para la routine:
 
-- `GET /api/email/kpis` — KPIs de la semana (lun–dom, TZ de config) + acumulado
-  mensual + deltas vs semana anterior + distribución de estados.
-- `GET /api/email/threads?page=&page_size=` — hilos sin responder por urgencia.
-- `GET /api/email/weekday-avg` — promedio de 1ª respuesta por día de la semana
-  (últimas 4 semanas).
+- `GET /api/email/kpis?mailbox=` — KPIs de la semana (lun–dom, TZ de config) +
+  acumulado mensual + deltas vs semana anterior + distribución de estados.
+- `GET /api/email/threads?page=&page_size=&mailbox=&dismissed=` — hilos sin
+  responder por urgencia. `dismissed=true` lista los descartados.
+- `GET /api/email/weekday-avg?mailbox=` — promedio de 1ª respuesta por día de
+  la semana (últimas 4 semanas).
+- `PATCH /api/email/threads` body `{ thread_id, dismissed }` — marca/desmarca
+  un hilo como "no requiere respuesta" (sale de KPIs y pendientes).
+
+Todos los `?mailbox=` filtran por `metadata.mailbox` (la routine lo envía;
+soporta valores multi-buzón separados por coma).
+
+### Dismiss manual ("este email no se responde")
+
+`email_threads.dismissed_at / dismissed_by` (migración 004) se setean solo
+desde el panel. La routine NO envía estos campos y el upsert del batch no los
+toca, así que un dismiss sobrevive a los re-envíos de cada sync. Un hilo
+descartado no cuenta en ningún KPI, ni a favor ni en contra.

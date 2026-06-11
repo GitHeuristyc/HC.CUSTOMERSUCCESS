@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/supabase-server";
 import { loadConfig } from "@/lib/config";
 import {
   computeWeekdayAverages,
+  matchesMailbox,
   rowToThread,
   type EmailThreadRow,
 } from "@/lib/email-sla";
@@ -11,8 +12,8 @@ import {
 const WINDOW_DAYS = 28;
 
 // Promedio de horas laborales de primera respuesta por día de la semana
-// (según received_at en la TZ de config), últimas 4 semanas.
-export async function GET() {
+// (según received_at en la TZ de config), últimas 4 semanas. ?mailbox= filtra.
+export async function GET(req: NextRequest) {
   const auth = await requireUser();
   if (!auth.ok) return auth.response;
 
@@ -35,9 +36,11 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const threads = ((data ?? []) as EmailThreadRow[]).map((row) =>
-    rowToThread(row, config.email_sla)
-  );
+  const mailbox = new URL(req.url).searchParams.get("mailbox");
+  const threads = ((data ?? []) as EmailThreadRow[])
+    .map((row) => rowToThread(row, config.email_sla))
+    .filter((t) => t.dismissed_at === null)
+    .filter((t) => (mailbox ? matchesMailbox(t, mailbox) : true));
 
   return NextResponse.json({
     weekdays: computeWeekdayAverages(threads, config.email_sla),

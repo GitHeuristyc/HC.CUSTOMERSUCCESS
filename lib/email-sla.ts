@@ -18,6 +18,8 @@ export type EmailThreadRow = {
   business_hours_to_resolution: number | null;
   resolved_at: string | null;
   metadata: Record<string, unknown> | null;
+  dismissed_at: string | null;
+  dismissed_by: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -51,7 +53,24 @@ export function rowToThread(
     business_hours_elapsed: row.business_hours_elapsed,
     business_hours_to_resolution: row.business_hours_to_resolution,
     resolved_at: row.resolved_at,
+    mailbox:
+      typeof row.metadata?.mailbox === "string" && row.metadata.mailbox.length > 0
+        ? row.metadata.mailbox
+        : null,
+    dismissed_at: row.dismissed_at ?? null,
   };
+}
+
+/** metadata.mailbox puede ser un buzón o varios separados por coma. */
+export function matchesMailbox(
+  thread: Pick<EmailThread, "mailbox">,
+  mailbox: string
+): boolean {
+  if (!thread.mailbox) return false;
+  return thread.mailbox
+    .split(",")
+    .map((m) => m.trim().toLowerCase())
+    .includes(mailbox.trim().toLowerCase());
 }
 
 const STATUS_URGENCY: Record<EmailThreadStatus, number> = {
@@ -80,7 +99,12 @@ function parseIsoOrNull(v: unknown): string | null {
   return new Date(t).toISOString();
 }
 
-export type IngestRow = Omit<EmailThreadRow, "created_at" | "updated_at">;
+// dismissed_at/dismissed_by se setean solo desde el panel — la routine no los
+// envía y el upsert del batch no debe pisarlos.
+export type IngestRow = Omit<
+  EmailThreadRow,
+  "created_at" | "updated_at" | "dismissed_at" | "dismissed_by"
+>;
 
 export function validateIngestItem(
   item: unknown,

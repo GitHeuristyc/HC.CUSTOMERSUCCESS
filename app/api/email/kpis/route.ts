@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServerClient } from "@/lib/supabase";
 import { requireUser } from "@/lib/supabase-server";
 import { loadConfig } from "@/lib/config";
 import {
   computeDeltas,
   computeKpis,
+  matchesMailbox,
   rowToThread,
   startOfMonthUtc,
   startOfWeekUtc,
@@ -14,7 +15,9 @@ import type { EmailThread, EmailThreadStatus } from "@/lib/types";
 
 // KPIs agregados: semana actual (lun–dom en la TZ de config, bucketing por
 // received_at) + acumulado del mes + delta vs semana anterior.
-export async function GET() {
+// ?mailbox= filtra por buzón. Los hilos descartados ("no requiere respuesta")
+// quedan fuera de todos los KPIs: no cuentan ni a favor ni en contra.
+export async function GET(req: NextRequest) {
   const auth = await requireUser();
   if (!auth.ok) return auth.response;
 
@@ -44,9 +47,11 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const threads = ((data ?? []) as EmailThreadRow[]).map((row) =>
-    rowToThread(row, config.email_sla)
-  );
+  const mailbox = new URL(req.url).searchParams.get("mailbox");
+  const threads = ((data ?? []) as EmailThreadRow[])
+    .map((row) => rowToThread(row, config.email_sla))
+    .filter((t) => t.dismissed_at === null)
+    .filter((t) => (mailbox ? matchesMailbox(t, mailbox) : true));
 
   const inWindow = (t: EmailThread, from: Date, to?: Date) => {
     const r = Date.parse(t.received_at);

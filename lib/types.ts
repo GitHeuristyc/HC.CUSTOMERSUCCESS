@@ -81,6 +81,10 @@ export type EmailThread = {
   business_hours_elapsed: number;
   business_hours_to_resolution: number | null;
   resolved_at: string | null;
+  /** Buzón(es) donde apareció el hilo (metadata.mailbox de la routine). */
+  mailbox: string | null;
+  /** Marcado manualmente como "no requiere respuesta". */
+  dismissed_at: string | null;
 };
 
 export type EmailSlaKpis = {
