@@ -69,7 +69,7 @@ B4. FILTRAR Y CLASIFICAR CADA HILO
 
    Descarta el hilo completo si:
    - El primer mensaje del hilo es INTERNO (hilos iniciados por nosotros no cuentan para el SLA), o
-   - El remitente del primer mensaje contiene alguno de estos patrones (case-insensitive): no-reply, noreply, notifications@, mailer-daemon, donotreply.
+   - El remitente del primer mensaje contiene alguno de estos patrones (case-insensitive, espejo de excluded_senders en la config del Board): no-reply, noreply, notifications@, mailer-daemon, donotreply, webmaster@, @heuristyc.atlassian.net, @e.atlassian.com, @engage.canva.com, @m.lastpass.com, @e.read.ai, @news.acumatica.com, @info.vercel.com, @mail.cursor.com, @acumatica.info, @acu-connect.com, hello@fathom.video.
    (El Board también rechaza estos casos; el filtro local solo evita tráfico inútil.)
 
    Para cada hilo que sobrevive, calcula:
