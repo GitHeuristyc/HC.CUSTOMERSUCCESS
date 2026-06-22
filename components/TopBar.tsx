@@ -147,6 +147,19 @@ export function TopBar({
         >
           Email SLA
         </Link>
+        <Link
+          href="/implementations"
+          style={{
+            padding: "5px 12px",
+            borderRadius: 7,
+            fontSize: 12,
+            fontWeight: 500,
+            color: "var(--ink-3)",
+            textDecoration: "none",
+          }}
+        >
+          Implementations
+        </Link>
       </nav>
 
       {/* User segmented control */}

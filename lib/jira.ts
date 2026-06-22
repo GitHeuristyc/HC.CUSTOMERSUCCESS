@@ -71,14 +71,15 @@ function transformIssue(raw: any): Issue | null {
   };
 }
 
-async function searchJira(jql: string): Promise<Issue[]> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function rawJiraSearch(jql: string, fields: string): Promise<any[]> {
   const auth = Buffer.from(`${JIRA_EMAIL}:${JIRA_API_TOKEN}`).toString("base64");
   const headers = {
     Authorization: `Basic ${auth}`,
     Accept: "application/json",
   };
-  const fields = "summary,status,priority,project,issuetype,created,updated,labels,assignee";
-  const results: Issue[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const results: any[] = [];
   let nextPageToken: string | undefined;
 
   while (true) {
@@ -95,17 +96,58 @@ async function searchJira(jql: string): Promise<Issue[]> {
     }
 
     const data = await res.json();
-    const issues: Issue[] = (data.issues ?? [])
-      .map(transformIssue)
-      .filter((i: Issue | null): i is Issue => i !== null);
-
-    results.push(...issues);
+    results.push(...(data.issues ?? []));
 
     if (data.isLast || !data.nextPageToken || (data.issues?.length ?? 0) === 0) break;
     nextPageToken = data.nextPageToken;
   }
 
   return results;
+}
+
+async function searchJira(jql: string): Promise<Issue[]> {
+  const fields = "summary,status,priority,project,issuetype,created,updated,labels,assignee";
+  return (await rawJiraSearch(jql, fields))
+    .map(transformIssue)
+    .filter((i: Issue | null): i is Issue => i !== null);
+}
+
+// "Go Live" custom field on the PRIM (Portal Implementation) project. Date field.
+export const GO_LIVE_FIELD = "customfield_11486";
+
+export type PrimImplementationRaw = {
+  key: string;
+  summary: string;
+  status: string;
+  statusCategory: string;
+  assignee: string | null;
+  goLive: string | null;
+  created: string;
+  updated: string;
+  url: string;
+};
+
+// All "Implementation from Portal" issues in PRIM, every status (so closed ones
+// can be counted). NOT filtered by assignee — most PRIM issues are unassigned.
+export async function fetchPrimImplementations(): Promise<PrimImplementationRaw[]> {
+  const fields = `summary,status,assignee,created,updated,${GO_LIVE_FIELD}`;
+  const jql =
+    'project = PRIM AND issuetype = "Implementation from Portal" ORDER BY created DESC';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (await rawJiraSearch(jql, fields)).map((raw: any) => {
+    const { fields: f } = raw;
+    return {
+      key: raw.key,
+      summary: f.summary ?? "",
+      status: f.status?.name ?? "",
+      statusCategory: f.status?.statusCategory?.key ?? "",
+      assignee: f.assignee?.displayName ?? null,
+      goLive: (f[GO_LIVE_FIELD] as string | null) ?? null,
+      created: f.created,
+      updated: f.updated,
+      url: `${JIRA_BASE_URL}/browse/${raw.key}`,
+    };
+  });
 }
 
 async function getExcludedList(): Promise<string> {

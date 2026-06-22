@@ -21,6 +21,7 @@ app/
     reminders/     # CRUD de recordatorios (+ batch e [id])
     email/         # Email SLA: ingesta (threads/batch) y lectura (kpis, threads, weekday-avg)
   email-sla/       # Panel de KPIs de Email SLA
+  implementations/ # Calendario de Go Live e implementaciones de PRIM
   settings/        # UI de configuración
   page.tsx         # Board principal
 components/        # Board, Column, IssueCard, DetailPanel, TopBar, EmailSla, etc.
@@ -163,6 +164,7 @@ npm run start
 - `GET /api/email/kpis` — KPIs de Email SLA (semana + mes + deltas)
 - `GET /api/email/threads` — hilos sin responder por urgencia (paginado)
 - `GET /api/email/weekday-avg` — promedio de 1ª respuesta por día de la semana
+- `GET /api/implementations` — implementaciones PRIM (Go Live) + indicadores (activas/cerradas/sin Go Live/outdated)
 
 ## Notas
 
